@@ -3,57 +3,57 @@
 ###############################################################
 ########################## FUNCTIONS ##########################
 ###############################################################
-function All-Command 
+function Invoke-All-Command
 {
-	Dependencies-Command 
+	Dependencies-Command
 	$msBuild = FindMSBuild
 	$msBuildArguments = "/t:Rebuild /nr:false"
 	if ($msBuild -eq $null)
 	{
-		echo "Unable to locate an appropriate version of MSBuild."
+		Write-Output "Unable to locate an appropriate version of MSBuild."
 	}
 	else
 	{
 		$proc = Start-Process $msBuild $msBuildArguments -NoNewWindow -PassThru -Wait
 		if ($proc.ExitCode -ne 0)
 		{
-			echo "Build failed. If just the development tools failed to build, try installing Visual Studio. You may also still be able to run the game."
+			Write-Output "Build failed. If just the development tools failed to build, try installing Visual Studio. You may also still be able to run the game."
 		}
 		else
 		{
-			echo "Build succeeded."
+			Write-Output "Build succeeded."
 		}
 	}
 }
 
-function Clean-Command 
+function Invoke-Clean-Command
 {
 	$msBuild = FindMSBuild
 	$msBuildArguments = "/t:Clean /nr:false"
 	if ($msBuild -eq $null)
 	{
-		echo "Unable to locate an appropriate version of MSBuild."
+		Write-Output "Unable to locate an appropriate version of MSBuild."
 	}
 	else
 	{
 		$proc = Start-Process $msBuild $msBuildArguments -NoNewWindow -PassThru -Wait
-		rm *.dll
-		rm *.dll.config
-		rm mods/*/*.dll
-		rm *.pdb
-		rm mods/*/*.pdb
-		rm *.exe
-		rm ./*/bin -r
-		rm ./*/obj -r
+		Remove-Item *.dll
+		Remove-Item *.dll.config
+		Remove-Item mods/*/*.dll
+		Remove-Item *.pdb
+		Remove-Item mods/*/*.pdb
+		Remove-Item *.exe
+		Remove-Item ./*/bin -r
+		Remove-Item ./*/obj -r
 		if (Test-Path thirdparty/download/)
 		{
-			rmdir thirdparty/download -Recurse -Force
+			Remove-Item thirdparty/download -Recurse -Force
 		}
-		echo "Clean complete."
+		Write-Output "Clean complete."
 	}
 }
 
-function Version-Command 
+function Invoke-Version-Command
 {
 	if ($command.Length -gt 1)
 	{
@@ -72,58 +72,58 @@ function Version-Command
 		}
 		else
 		{
-			echo "Not a git repository. The version will remain unchanged."
+			Write-Output "Not a git repository. The version will remain unchanged."
 		}
 	}
 	else
-	{	
-		echo "Unable to locate Git. The version will remain unchanged."
+	{
+		Write-Output "Unable to locate Git. The version will remain unchanged."
 	}
-	
+
 	if ($version -ne $null)
 	{
 		$version | out-file ".\VERSION"
 		$mods = @("mods/ra/mod.yaml", "mods/cnc/mod.yaml", "mods/d2k/mod.yaml", "mods/ts/mod.yaml", "mods/modcontent/mod.yaml", "mods/all/mod.yaml")
 		foreach ($mod in $mods)
 		{
-			$replacement = (gc $mod) -Replace "Version:.*", ("Version: {0}" -f $version)
-			sc $mod $replacement
+			$replacement = (Get-Content $mod) -Replace "Version:.*", ("Version: {0}" -f $version)
+			Set-Content $mod $replacement
 
-			$prefix = $(gc $mod) | Where { $_.ToString().EndsWith(": User") }
+			$prefix = $(Get-Content $mod) | Where-Object { $_.ToString().EndsWith(": User") }
 			if ($prefix -and $prefix.LastIndexOf("/") -ne -1)
 			{
 				$prefix = $prefix.Substring(0, $prefix.LastIndexOf("/"))
 			}
-			$replacement = (gc $mod) -Replace ".*: User", ("{0}/{1}: User" -f $prefix, $version)
-			sc $mod $replacement
+			$replacement = (Get-Content $mod) -Replace ".*: User", ("{0}/{1}: User" -f $prefix, $version)
+			Set-Content $mod $replacement
 		}
-		echo ("Version strings set to '{0}'." -f $version)
+		Write-Output ("Version strings set to '{0}'." -f $version)
 	}
 }
 
-function Dependencies-Command
+function Invoke-Dependencies-Command
 {
-	cd thirdparty
+	Set-Location thirdparty
 	./fetch-thirdparty-deps.ps1
-	cp download/*.dll ..
-	cp download/GeoLite2-Country.mmdb.gz ..
-	cp download/windows/*.dll ..
-	cd ..
-	echo "Dependencies copied."
+	Copy-Item download/*.dll ..
+	Copy-Item download/GeoLite2-Country.mmdb.gz ..
+	Copy-Item download/windows/*.dll ..
+	Set-Location ..
+	Write-Output "Dependencies copied."
 }
 
 function Test-Command
 {
 	if (Test-Path OpenRA.Utility.exe)
 	{
-		echo "Testing mods..."
-		echo "Testing Tiberian Sun mod MiniYAML..."
+		Write-Output "Testing mods..."
+		Write-Output "Testing Tiberian Sun mod MiniYAML..."
 		./OpenRA.Utility.exe ts --check-yaml
-		echo "Testing Dune 2000 mod MiniYAML..."
+		Write-Output "Testing Dune 2000 mod MiniYAML..."
 		./OpenRA.Utility.exe d2k --check-yaml
-		echo "Testing Tiberian Dawn mod MiniYAML..."
+		Write-Output "Testing Tiberian Dawn mod MiniYAML..."
 		./OpenRA.Utility.exe cnc --check-yaml
-		echo "Testing Red Alert mod MiniYAML..."
+		Write-Output "Testing Red Alert mod MiniYAML..."
 		./OpenRA.Utility.exe ra --check-yaml
 	}
 	else
@@ -132,10 +132,10 @@ function Test-Command
 	}
 }
 
-function Check-Command {
+function Invoke-Check-Command {
 	if (Test-Path OpenRA.Utility.exe)
 	{
-		echo "Checking for explicit interface violations..."
+		Write-Output "Checking for explicit interface violations..."
 		./OpenRA.Utility.exe all --check-explicit-interfaces
 	}
 	else
@@ -145,49 +145,49 @@ function Check-Command {
 
 	if (Test-Path OpenRA.StyleCheck.exe)
 	{
-		echo "Checking for code style violations in OpenRA.Platforms.Default..."
+		Write-Output "Checking for code style violations in OpenRA.Platforms.Default..."
 		./OpenRA.StyleCheck.exe OpenRA.Platforms.Default
-		echo "Checking for code style violations in OpenRA.Game..."
+		Write-Output "Checking for code style violations in OpenRA.Game..."
 		./OpenRA.StyleCheck.exe OpenRA.Game
-		echo "Checking for code style violations in OpenRA.Mods.Common..."
+		Write-Output "Checking for code style violations in OpenRA.Mods.Common..."
 		./OpenRA.StyleCheck.exe OpenRA.Mods.Common
-		echo "Checking for code style violations in OpenRA.Mods.Cnc..."
+		Write-Output "Checking for code style violations in OpenRA.Mods.Cnc..."
 		./OpenRA.StyleCheck.exe OpenRA.Mods.Cnc
-		echo "Checking for code style violations in OpenRA.Mods.D2k..."
+		Write-Output "Checking for code style violations in OpenRA.Mods.D2k..."
 		./OpenRA.StyleCheck.exe OpenRA.Mods.D2k
-		echo "Checking for code style violations in OpenRA.Utility..."
+		Write-Output "Checking for code style violations in OpenRA.Utility..."
 		./OpenRA.StyleCheck.exe OpenRA.Utility
-		echo "Checking for code style violations in OpenRA.Test..."
+		Write-Output "Checking for code style violations in OpenRA.Test..."
 		./OpenRA.StyleCheck.exe OpenRA.Test
 	}
 	else
 	{
-		echo "OpenRA.StyleCheck.exe could not be found. Build the project first using the `"all`" command."
+		Write-Output "OpenRA.StyleCheck.exe could not be found. Build the project first using the `"all`" command."
 	}
 }
 
-function Check-Scripts-Command
+function Invoke-Check-Scripts-Command
 {
 	if ((Get-Command "luac.exe" -ErrorAction SilentlyContinue) -ne $null)
 	{
-		echo "Testing Lua scripts..."
-		foreach ($script in ls "mods/*/maps/*/*.lua")
+		Write-Output "Testing Lua scripts..."
+		foreach ($script in Get-ChildItem "mods/*/maps/*/*.lua")
 		{
 			luac -p $script
 		}
-		foreach ($script in ls "lua/*.lua")
+		foreach ($script in Get-ChildItem "lua/*.lua")
 		{
 			luac -p $script
 		}
-		echo "Check completed!"
+		Write-Output "Check completed!"
 	}
 	else
 	{
-		echo "luac.exe could not be found. Please install Lua."
+		Write-Output "luac.exe could not be found. Please install Lua."
 	}
 }
 
-function Docs-Command
+function Invoke-Docs-Command
 {
 	if (Test-Path OpenRA.Utility.exe)
 	{
@@ -223,26 +223,26 @@ function FindMSBuild
 
 function UtilityNotFound
 {
-	echo "OpenRA.Utility.exe could not be found. Build the project first using the `"all`" command."
+	Write-Output "OpenRA.Utility.exe could not be found. Build the project first using the `"all`" command."
 }
 ###############################################################
 ############################ Main #############################
 ###############################################################
 if ($args.Length -eq 0)
 {
-	echo "Command list:"
-	echo ""
-	echo "  all             Builds the game and its development tools."
-	echo "  dependencies    Copies the game's dependencies into the main game folder."
-	echo "  version         Sets the version strings for the default mods to the latest"
-	echo "                  version for the current Git branch."
-	echo "  clean           Removes all built and copied files. Use the 'all' and"
-	echo "                  'dependencies' commands to restore removed files."
-	echo "  test            Tests the default mods for errors."
-	echo "  check           Checks .cs files for StyleCop violations."
-	echo "  check-scripts   Checks .lua files for syntax errors."
-	echo "  docs            Generates the trait and Lua API documentation."
-	echo ""
+	Write-Output "Command list:"
+	Write-Output ""
+	Write-Output "  all             Builds the game and its development tools."
+	Write-Output "  dependencies    Copies the game's dependencies into the main game folder."
+	Write-Output "  version         Sets the version strings for the default mods to the latest"
+	Write-Output "                  version for the current Git branch."
+	Write-Output "  clean           Removes all built and copied files. Use the 'all' and"
+	Write-Output "                  'dependencies' commands to restore removed files."
+	Write-Output "  test            Tests the default mods for errors."
+	Write-Output "  check           Checks .cs files for StyleCop violations."
+	Write-Output "  check-scripts   Checks .lua files for syntax errors."
+	Write-Output "  docs            Generates the trait and Lua API documentation."
+	Write-Output ""
 	$command = (Read-Host "Enter command").Split(' ', 2)
 }
 else
@@ -266,13 +266,13 @@ switch ($execute)
 	"check" { Check-Command }
 	"check-scripts" { Check-Scripts-Command }
 	"docs" { Docs-Command }
-	Default { echo ("Invalid command '{0}'" -f $command) }
+	Default { Write-Output ("Invalid command '{0}'" -f $command) }
 }
 
-#In case the script was called without any parameters we keep the window open 
+#In case the script was called without any parameters we keep the window open
 if ($args.Length -eq 0)
 {
-	echo "Press enter to continue."
+	Write-Output "Press enter to continue."
 	while ($true)
 	{
 		if ([System.Console]::KeyAvailable)
