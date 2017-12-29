@@ -256,17 +256,16 @@ if ($command.Length -gt 1)
 	$execute = $command[0]
 }
 
-switch ($execute)
-{
-	"all" { All-Command }
-	"dependencies" { Dependencies-Command }
-	"version" { Version-Command }
-	"clean" { Clean-Command }
-	"test" { Test-Command }
-	"check" { Check-Command }
-	"check-scripts" { Check-Scripts-Command }
-	"docs" { Docs-Command }
-	Default { Write-Output ("Invalid command '{0}'" -f $command) }
+switch ($execute) {
+  "all" { Invoke-All-Command }
+  "dependencies" { Invoke-Dependencies-Command }
+  "version" { Invoke-Version-Command }
+  "clean" { Invoke-Clean-Command }
+  "test" { Test-Command }
+  "check" { Invoke-Check-Command }
+  "check-scripts" { Invoke-Check-Scripts-Command }
+  "docs" { Invoke-Docs-Command }
+  Default { Write-Output ("Invalid command '{0}'" -f $command) }
 }
 
 #In case the script was called without any parameters we keep the window open
