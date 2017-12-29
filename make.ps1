@@ -3,10 +3,10 @@
 ###############################################################
 ########################## FUNCTIONS ##########################
 ###############################################################
-function Invoke-All-Command
+function Invoke-All
 {
 	Dependencies-Command
-	$msBuild = FindMSBuild
+	$msBuild = Invoke-FindMSBUILD
 	$msBuildArguments = "/t:Rebuild /nr:false"
 	if ($msBuild -eq $null)
 	{
@@ -26,9 +26,9 @@ function Invoke-All-Command
 	}
 }
 
-function Invoke-Clean-Command
+function Invoke-Clean
 {
-	$msBuild = FindMSBuild
+	$msBuild = Invoke-FindMSBuild
 	$msBuildArguments = "/t:Clean /nr:false"
 	if ($msBuild -eq $null)
 	{
@@ -53,7 +53,7 @@ function Invoke-Clean-Command
 	}
 }
 
-function Invoke-Version-Command
+function Invoke-Version
 {
 	if ($command.Length -gt 1)
 	{
@@ -101,7 +101,7 @@ function Invoke-Version-Command
 	}
 }
 
-function Invoke-Dependencies-Command
+function Invoke-Dependencies
 {
 	Set-Location thirdparty
 	./fetch-thirdparty-deps.ps1
@@ -112,7 +112,7 @@ function Invoke-Dependencies-Command
 	Write-Output "Dependencies copied."
 }
 
-function Test-Command
+function Invoke-Test
 {
 	if (Test-Path OpenRA.Utility.exe)
 	{
@@ -132,7 +132,7 @@ function Test-Command
 	}
 }
 
-function Invoke-Check-Command {
+function Invoke-Check {
 	if (Test-Path OpenRA.Utility.exe)
 	{
 		Write-Output "Checking for explicit interface violations..."
@@ -166,7 +166,7 @@ function Invoke-Check-Command {
 	}
 }
 
-function Invoke-Check-Scripts-Command
+function Invoke-Scripts-test
 {
 	if ((Get-Command "luac.exe" -ErrorAction SilentlyContinue) -ne $null)
 	{
@@ -187,7 +187,7 @@ function Invoke-Check-Scripts-Command
 	}
 }
 
-function Invoke-Docs-Command
+function Write-Docs
 {
 	if (Test-Path OpenRA.Utility.exe)
 	{
@@ -203,7 +203,7 @@ function Invoke-Docs-Command
 	}
 }
 
-function FindMSBuild
+function Invoke-FindMSBUILD
 {
 	$key = "HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\4.0"
 	$property = Get-ItemProperty $key -ErrorAction SilentlyContinue
@@ -257,14 +257,14 @@ if ($command.Length -gt 1)
 }
 
 switch ($execute) {
-  "all" { Invoke-All-Command }
-  "dependencies" { Invoke-Dependencies-Command }
-  "version" { Invoke-Version-Command }
-  "clean" { Invoke-Clean-Command }
-  "test" { Test-Command }
-  "check" { Invoke-Check-Command }
-  "check-scripts" { Invoke-Check-Scripts-Command }
-  "docs" { Invoke-Docs-Command }
+  "all" { Invoke-All }
+  "dependencies" { Invoke-Dependencies }
+  "version" { Invoke-Version }
+  "clean" { Invoke-Clean }
+  "test" { Invoke-Test }
+  "check" { Invoke-Check }
+  "check-scripts" { Invoke-Scripts-test }
+  "docs" { Write-Docs }
   Default { Write-Output ("Invalid command '{0}'" -f $command) }
 }
 
